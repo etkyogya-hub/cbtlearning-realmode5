@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>REAL MODE — FIXED 3D MOCKUP</title>
+<title>REAL MODE — CONTENT FIRST</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -17,7 +17,7 @@ html,body{
   overflow:hidden;
 }
 
-/* ===== STAGE ===== */
+/* STAGE */
 #stage{
   position:absolute;
   inset:0;
@@ -26,49 +26,53 @@ html,body{
   justify-content:center;
 }
 
-/* ===== PHONE MOCKUP (VISIBLE) ===== */
+/* PHONE */
 #phone{
   width:390px;
   height:760px;
   background:#111;
   border-radius:36px;
   padding:14px;
-  box-shadow:
-    0 30px 60px rgba(0,0,0,.9),
-    inset 0 0 0 2px #333;
+  box-shadow:0 30px 70px rgba(0,0,0,.9), inset 0 0 0 2px #333;
 }
 
-/* SAFE AREA (ANTI KELUAR TIKTOK) */
+/* SAFE AREA */
 #safe{
   width:100%;
   height:100%;
-  background:#181818;           /* ← BUKAN HITAM */
+  background:#161616;
   border-radius:26px;
   padding:16px 14px;
   display:flex;
   flex-direction:column;
   gap:14px;
-  box-shadow:inset 0 0 0 1px #2a2a2a;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 #top{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   font-size:13px;
   color:#8ff;
 }
-#level{color:#fff}
 
-/* ===== QUESTION ===== */
+/* HOOK */
+#hook{
+  font-size:18px;
+  font-weight:700;
+  color:#ff6;
+  text-align:center;
+  animation:pulse 1.2s infinite;
+}
+
+/* QUESTION */
 #question{
   font-size:20px;
   font-weight:600;
   line-height:1.35;
 }
 
-/* ===== OPTIONS ===== */
+/* OPTIONS */
 #options{
   display:flex;
   flex-direction:column;
@@ -84,24 +88,22 @@ html,body{
 .correct{background:#0b3;border-color:#0f0}
 .wrong{background:#500;border-color:#f00}
 
-/* ===== RATIONALE ===== */
+/* RATIONALE */
 #rationale{
   display:none;
-  font-size:13px;
-  line-height:1.45;
   background:#202020;
   border-radius:14px;
   padding:12px;
+  font-size:13px;
+  line-height:1.45;
   color:#ddd;
 }
 
-/* ===== LEVEL UP ===== */
-#levelUp{
-  display:none;
-  text-align:center;
-  font-size:18px;
-  font-weight:700;
-  color:#0f0;
+/* ANIM */
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.03)}
+  100%{transform:scale(1)}
 }
 </style>
 </head>
@@ -111,108 +113,110 @@ html,body{
   <div id="phone">
     <div id="safe">
       <div id="top">
-        <div id="timer">⏱ 6</div>
+        <div id="timer">⏱ 7</div>
         <div id="level">LEVEL 1</div>
       </div>
+
+      <div id="hook">JANGAN JAWAB CEPAT</div>
 
       <div id="question"></div>
       <div id="options"></div>
       <div id="rationale"></div>
-      <div id="levelUp">LEVEL UP</div>
     </div>
   </div>
 </div>
 
 <script>
-const BANK=[
-[
- {q:"3/4 dari suatu bilangan adalah 18. 2/3 dari bilangan itu?",
-  o:["8","12","16","18"],c:2,r:"Bilangan 24 → 2/3 × 24 = 16"}
-],
-[
- {q:"Jika 40% dari x = 24, maka 3/5 x = ?",
-  o:["24","30","36","40"],c:2,r:"40% = 2/5 → x=60 → 3/5×60=36"}
-],
-[
- {q:"Jika P→Q dan ¬Q, maka?",
-  o:["P","¬P","Q","Tidak pasti"],c:1,r:"Modus tollens → ¬P"}
-]
+/* ===== REAL CONTENT ===== */
+const LEVELS=[
+{
+ q:"3/4 dari suatu bilangan adalah 18. Berapa 2/3 bilangan itu?",
+ o:["8","12","16","18"],
+ c:2,
+ r:"Mayoritas langsung kalikan. Yang benar: cari bilangan awal = 24, lalu 2/3 × 24 = 16."
+},
+{
+ q:"Jika 40% dari x = 24, maka nilai 3/5 x adalah?",
+ o:["24","30","36","40"],
+ c:2,
+ r:"40% = 2/5. Jadi x = 60. Maka 3/5 × 60 = 36."
+},
+{
+ q:"Jika P → Q dan Q salah, kesimpulan logisnya?",
+ o:["P benar","P salah","Q benar","Tidak pasti"],
+ c:1,
+ r:"Ini modus tollens. Q salah memaksa P juga salah."
+}
 ];
 
-let lvl=0,idx=0,t=6,lock=false,timer=null;
+let lvl=0,time=7,lock=false,timer=null;
 
-const Q=question,O=options,R=rationale,T=timer,L=document.getElementById("level"),UP=levelUp;
+const Q=question,O=options,R=rationale,T=timer,L=level,H=hook;
 
-load(); run();
+load(); start();
 
 function load(){
- lock=false; t=6; upd();
+ lock=false; time=7; upd();
+ const d=LEVELS[lvl];
  L.textContent="LEVEL "+(lvl+1);
- UP.style.display="none";
- R.style.display="none";
- const q=BANK[lvl][idx];
- Q.textContent=q.q;
+ Q.textContent=d.q;
  O.innerHTML="";
- q.o.forEach((x,i)=>{
-  const d=document.createElement("div");
-  d.className="option";
-  d.textContent=x;
-  d.onclick=()=>pick(i);
-  O.appendChild(d);
+ R.style.display="none";
+ H.style.display="block";
+ d.o.forEach((x,i)=>{
+  const e=document.createElement("div");
+  e.className="option";
+  e.textContent=x;
+  e.onclick=()=>pick(i);
+  O.appendChild(e);
  });
 }
 
 function pick(i){
  if(lock)return;
  lock=true; clearInterval(timer);
- const q=BANK[lvl][idx];
+ const d=LEVELS[lvl];
  [...document.querySelectorAll(".option")].forEach((e,k)=>{
-  if(k===q.c)e.classList.add("correct");
+  if(k===d.c)e.classList.add("correct");
   else if(k===i)e.classList.add("wrong");
  });
- setTimeout(()=>show(q),600);
+ setTimeout(()=>show(d),600);
 }
 
-function show(q){
- R.textContent=q.r;
+function show(d){
+ H.style.display="none";
+ R.textContent=d.r;
  R.style.display="block";
- setTimeout(next,900);
+ setTimeout(next,1200);
 }
 
 function next(){
- idx++;
- if(idx>=BANK[lvl].length){
-  lvl++; idx=0;
-  if(lvl>=BANK.length){
-    UP.textContent="MAX LEVEL";
-    UP.style.display="block";
-    return;
-  }
-  UP.style.display="block";
-  setTimeout(load,900);
- }else{
-  load();
+ lvl++;
+ if(lvl>=LEVELS.length){
+  Q.textContent="STOP DI SINI. LANJUT ATAU ULANG?";
+  O.innerHTML="";
+  return;
  }
- run();
+ load(); start();
 }
 
-function run(){
+function start(){
  clearInterval(timer);
  timer=setInterval(()=>{
-  t--; upd();
-  if(t<=0){clearInterval(timer); auto();}
+  time--; upd();
+  if(time<=0){clearInterval(timer); auto();}
  },1000);
 }
 
 function auto(){
  if(lock)return;
  lock=true;
- const q=BANK[lvl][idx];
- document.querySelectorAll(".option")[q.c].classList.add("correct");
- setTimeout(()=>show(q),600);
+ const d=LEVELS[lvl];
+ document.querySelectorAll(".option")[d.c].classList.add("correct");
+ setTimeout(()=>show(d),600);
 }
 
-function upd(){ T.textContent="⏱ "+t }
+function upd(){ T.textContent="⏱ "+time }
 </script>
 </body>
 </html>
